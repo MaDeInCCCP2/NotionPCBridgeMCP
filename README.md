@@ -1,1 +1,1 @@
-# NotionPCBridgeMCP
+# PCBridgeMCP
