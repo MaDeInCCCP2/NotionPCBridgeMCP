@@ -1,0 +1,8 @@
+# The same list is installed by setup.ps1 (START.bat) - keep them in sync.
+mcp>=1.10,<2
+httpx>=0.27,<1
+pillow>=10.4,<13
+send2trash>=1.8,<2   # delete_path -> Recycle Bin
+pyautogui>=0.9.54,<1  # only for the 'input' module (mouse/keyboard)
+psutil>=5.9,<8        # processes, PC load, supervisor
+pystray>=0.19,<1      # tray icon (supervisor.py)

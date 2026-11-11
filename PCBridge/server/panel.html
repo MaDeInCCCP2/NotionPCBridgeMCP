@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>PC Bridge</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--fg:#1d1f23;--mut:#6b7280;--line:#e5e7eb;--acc:#2563eb;--ok:#16a34a;--bad:#dc2626;--warn:#d97706;
+--add:#e6ffec;--addt:#116329;--del:#ffebe9;--delt:#82071e;--chg:#fff8c5;--code:#f3f4f6}
+@media (prefers-color-scheme:dark){:root{--bg:#111318;--card:#1a1d23;--fg:#e5e7eb;--mut:#9ca3af;--line:#2b2f36;--acc:#60a5fa;
+--add:#12361f;--addt:#7ee2a8;--del:#3d1518;--delt:#ffa8a8;--chg:#3a3413;--code:#22262d}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 "Segoe UI",system-ui,sans-serif}
+header{display:flex;align-items:center;gap:14px;padding:12px 20px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+#dot{width:14px;height:14px;border-radius:50%;background:#999;flex:none}#dot.blink{animation:b .6s infinite alternate}
+@keyframes b{to{opacity:.25}}
+h1{font-size:16px;margin:0}#head{color:var(--mut);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav button{background:none;border:0;color:var(--mut);font:inherit;padding:8px 12px;border-radius:8px;cursor:pointer}
+nav button.on{background:var(--code);color:var(--fg);font-weight:600}
+main{padding:18px 20px;max-width:1400px;margin:auto}.tab{display:none}.tab.on{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}.card h2{font-size:14px;margin:0 0 10px}
+.row{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line)}.row:first-of-type{border-top:0}
+.row .l{flex:1}.mut{color:var(--mut)}.small{font-size:12px}
+button.b{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:7px 14px;font:inherit;cursor:pointer}
+button.g{background:var(--code);color:var(--fg)}button.r{background:var(--bad)}button:disabled{opacity:.5;cursor:default}
+.sw{position:relative;width:38px;height:22px;flex:none}.sw input{display:none}.sw span{position:absolute;inset:0;background:#c4c8cf;border-radius:22px;transition:.15s;cursor:pointer}
+.sw span:before{content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s}
+.sw input:checked+span{background:var(--ok)}.sw input:checked+span:before{transform:translateX(16px)}.sw input:disabled+span{opacity:.5}
+code,.mono{font-family:Consolas,"Cascadia Mono",monospace;font-size:12.5px}
+.field{display:flex;gap:6px;align-items:center;background:var(--code);border-radius:8px;padding:6px 8px;margin:4px 0 8px}
+.field code{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.step{display:flex;gap:10px;padding:7px 0;border-top:1px solid var(--line)}.step:first-child{border-top:0}
+.step .i{font-weight:700;width:18px}.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+.fix{background:var(--del);color:var(--delt);border-radius:8px;padding:6px 10px;margin-top:4px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.tools input[type=search],select{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit}
+.tools input[type=search]{flex:1;min-width:220px}
+#feed{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 0;height:calc(100vh - 170px);overflow:auto}
+.blk{padding:3px 14px;white-space:pre-wrap;word-break:break-word;font-family:Consolas,monospace;font-size:12.5px}
+.blk:hover{background:var(--code)}.blk .add{background:var(--add);color:var(--addt);display:block}.blk .del{background:var(--del);color:var(--delt);display:block}
+.blk .ok{color:var(--ok)}.blk .bad{color:var(--bad)}.blk .warn{color:var(--warn)}.hl{background:#fde047;color:#000}
+.split{display:grid;grid-template-columns:380px 1fr;gap:16px}@media(max-width:900px){.split{grid-template-columns:1fr}}
+#clist{background:var(--card);border:1px solid var(--line);border-radius:12px;height:calc(100vh - 170px);overflow:auto}
+.ch{display:flex;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);cursor:pointer}.ch:hover{background:var(--code)}
+.ch.sel{background:var(--code);box-shadow:inset 3px 0 var(--acc)}.ch .p{flex:1;min-width:0}.ch .p div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{font-size:11px;border-radius:6px;padding:1px 6px;background:var(--code);color:var(--mut)}.badge.u{background:var(--chg)}
+#diff{background:var(--card);border:1px solid var(--line);border-radius:12px;height:calc(100vh - 170px);overflow:auto}
+.fh{position:sticky;top:0;background:var(--card);padding:8px 12px;border-bottom:1px solid var(--line);font-weight:600;display:flex;gap:10px}
+table.d{border-collapse:collapse;width:100%;table-layout:fixed}table.d td{padding:0 6px;vertical-align:top;white-space:pre-wrap;word-break:break-all;font-family:Consolas,monospace;font-size:12.5px}
+table.d td.n{width:46px;color:var(--mut);text-align:right;user-select:none}table.d td.c{width:calc(50% - 46px)}
+tr.del td.c.L,tr.chg td.c.L{background:var(--del)}tr.add td.c.R,tr.chg td.c.R{background:var(--add)}tr.chg td.c{}
+tr.skip td{background:var(--code);color:var(--mut);text-align:center;font-size:11px}
+#banner{display:none;background:var(--chg);border:1px solid var(--warn);border-radius:12px;padding:12px 16px;margin-bottom:12px;gap:10px;align-items:center}
+#toast{position:fixed;right:20px;bottom:20px;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;display:none;max-width:420px}
+.empty{padding:30px;text-align:center;color:var(--mut)}
+</style></head><body>
+<header><div id="dot"></div><h1>PC Bridge <span id="ver" class="mut small"></span></h1><div id="head"></div>
+<nav><button data-t="ov" class="on">Обзор</button><button data-t="feed">Лента действий</button><button data-t="chg">Изменения файлов</button></nav></header>
+<main>
+<section id="ov" class="tab on"><div class="grid">
+ <div class="card"><h2>Состояние</h2>
+  <div class="row"><div class="l">Мост</div><div id="st" class="mut"></div></div>
+  <div class="row"><div class="l">Notion-агент подключался</div><div id="lc" class="mut"></div></div>
+  <div class="row"><div class="l">Сейчас</div><div id="act" class="mut"></div></div>
+  <div class="row" style="gap:6px;flex-wrap:wrap"><button class="b g" onclick="A('restart')">Перезапустить мост</button>
+  <button class="b g" onclick="A('console')">Консоль</button><button class="b g" onclick="A('open',{target:'workspace'})">Рабочая папка</button>
+  <button class="b g" onclick="A('open',{target:'logs'})">Логи</button><button class="b r" onclick="stopAll()">Остановить всё</button></div></div>
+ <div class="card"><h2>Подключение к Notion</h2>
+  <div class="mut small">Адрес MCP-сервера</div><div class="field"><code id="url">-</code><button class="b g" onclick="cp('url')">Копировать</button></div>
+  <div id="tokbox"><div class="mut small">Токен (Authorization: Bearer)</div><div class="field"><code id="tok">••••••••</code>
+  <button class="b g" onclick="showTok=!showTok;draw()">Показать</button><button class="b g" onclick="cp('token')">Копировать</button></div></div>
+  <div style="display:flex;gap:10px;align-items:center"><button class="b" id="chk" onclick="check()">Проверить подключение</button><span id="chkt" class="mut small"></span></div>
+  <div id="steps" style="margin-top:8px"></div></div>
+ <div class="card"><h2>Режимы</h2><div id="modes"></div></div>
+ <div class="card"><h2>Модули <span class="mut small">(переключение перезапускает мост)</span></h2><div id="mods"></div>
+  <div class="row"><div class="l mut small">Остальные настройки - в мастере</div><button class="b g" onclick="A('settings')">Все настройки...</button></div></div>
+</div></section>
+<section id="feedtab" class="tab"><div class="tools"><input type="search" id="q" placeholder="Поиск по ленте: файл, команда, ошибка...">
+<select id="mod"><option value="">Все модули</option></select><select id="kind"><option value="">Все события</option><option value="chg">Только изменения</option>
+<option value="err">Только ошибки</option><option value="warn">Опасные и запрещённые</option></select>
+<label class="mut"><input type="checkbox" id="auto" checked> автопрокрутка</label><span id="fc" class="mut small"></span></div><div id="feedbox" style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 0;height:calc(100vh - 170px);overflow:auto"></div></section>
+<section id="chg" class="tab"><div id="banner"><div style="flex:1" id="btext"></div><button class="b r" onclick="undoSel()">Отменить</button><button class="b g" onclick="hideBanner()">Не надо</button></div>
+<div class="tools"><input type="search" id="cq" placeholder="Поиск по имени файла..."><button class="b r" id="ubtn" onclick="undoSel()" disabled>Отменить выбранные</button>
+<span class="mut small">Отмена возвращает файлы к состоянию до изменения и сама тоже отменяется.</span></div>
+<div class="split"><div id="clist"></div><div id="diff"><div class="empty">Выберите изменение слева</div></div></div></section>
+</main><div id="toast"></div>
+<script>
+const K="__KEY__";let S=null,showTok=false,feedPos=-1,blocks=[],changes=[],sel=new Set(),cur=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+async function api(p,body){const r=await fetch(p,{method:body?"POST":"GET",headers:{"X-PCB-Panel":K,"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined});return r.json()}
+function toast(t){const e=$("toast");e.textContent=t;e.style.display="block";clearTimeout(e._t);e._t=setTimeout(()=>e.style.display="none",3500)}
+async function A(d,x){const r=await api("/api/action",Object.assign({do:d},x||{}));if(r.error)toast(r.error);setTimeout(load,400);return r}
+function stopAll(){if(confirm("Остановить PC Bridge полностью? Панель тоже закроется."))A("stop")}
+async function cp(w){const v=w=="url"?S.url:S.token;try{await navigator.clipboard.writeText(v)}catch(e){await A("copy",{what:w})}toast("Скопировано")}
+function sw(on,fn,dis){return `<label class="sw"><input type="checkbox" ${on?"checked":""} ${dis?"disabled":""} onchange="${fn}"><span></span></label>`}
+function draw(){if(!S)return;$("dot").style.background=S.color;$("dot").className=S.running?"blink":"";$("ver").textContent=S.version;
+$("head").textContent=S.headline;$("st").textContent=S.status;$("lc").textContent=S.last_call_text;$("act").textContent=S.running?("работает: "+S.last_tool):(S.activity||"ничего не делает");
+$("url").textContent=S.url||"туннель ещё не запущен";$("tokbox").style.display=S.token_auth?"":"none";$("tok").textContent=showTok?S.token:"•".repeat(24);
+const m=[["Пауза (Ctrl+Alt+Shift+P)","агент ничего не может делать",S.paused,"A('pause')"],["Только чтение",S.read_only_fixed?"задано в настройках":"агент смотрит, но ничего не меняет",S.read_only,"A('readonly')",S.read_only_fixed],
+["Уведомления Windows","с кнопками «Показать» и «Отменить»",S.notifications,"A('notifications')"],["Автозапуск с Windows","",S.autostart,"A('autostart')"]];
+$("modes").innerHTML=m.map(x=>`<div class="row"><div class="l">${x[0]}<div class="mut small">${x[1]}</div></div>${sw(x[2],x[3],x[4])}</div>`).join("");
+$("mods").innerHTML=S.modules.map(x=>`<div class="row"><div class="l">${esc(x.name)}${x.risky?' <span class="badge">осторожно</span>':""}</div>${sw(x.on,`mod('${x.key}',this.checked,${x.risky})`)}</div>`).join("");
+const c=S.check;if(c&&c.steps&&c.steps.length){$("chkt").textContent=c.running?"проверяю...":(c.ok?"всё в порядке, ":"есть проблема, ")+"проверено "+new Date(c.t*1000).toLocaleTimeString();
+$("steps").innerHTML=c.steps.map(s=>`<div class="step"><div class="i ${s.ok?"ok":"bad"}">${s.ok?"✓":"✗"}</div><div style="flex:1"><b>${esc(s.name)}</b> <span class="mut">${esc(s.detail)}</span>${s.fix?`<div class="fix">${esc(s.fix)}</div>`:""}</div></div>`).join("")}}
+function mod(k,on,risky){if(on&&risky&&!confirm("Этот модуль даёт агенту больше власти над ПК. Включить и перезапустить мост?")){load();return}A("module",{key:k,on:on});toast("Перезапускаю мост...")}
+async function check(){$("chk").disabled=true;$("chkt").textContent="проверяю...";$("steps").innerHTML="";try{S.check=await api("/api/check",{});draw()}finally{$("chk").disabled=false}}
+async function load(){try{S=await api("/api/state");draw()}catch(e){$("head").textContent="Панель не отвечает - PC Bridge остановлен?";$("dot").style.background="#999"}}
+// ---- feed ----
+const MODS=[["Unreal Engine",/^unreal_|^ue_/],["Blender",/^blender_/],["Roblox",/^roblox_/],["Командная строка",/^(run_command|run_|job_|start_job|read_job|stop_job|list_jobs)/],
+["Экран и ввод",/^(screenshot|screen_|list_windows|focus_window|read_screen|find_text|click|mouse_|key|type_|hotkey|scroll)/],["Интернет",/^(http_|web_|fetch|download)/],
+["Буфер, файлы, процессы",/^(clipboard|open_path|list_processes|kill_process|notify)/],["Git",/^git_/],["История и отмена",/^(undo_|list_changes)/]];
+MODS.forEach(m=>$("mod").insertAdjacentHTML("beforeend",`<option>${m[0]}</option>`));$("mod").insertAdjacentHTML("beforeend","<option>Файлы и код</option>");
+function modOf(tool){for(const m of MODS)if(m[1].test(tool))return m[0];return tool?"Файлы и код":""}
+function parse(text){const out=[];for(const ln of text.split(/\r?\n/)){if(/^\d\d:\d\d:\d\d/.test(ln)||!out.length)out.push({lines:[ln]});else if(ln!=="")out[out.length-1].lines.push(ln)}
+for(const b of out){const m=/^\d\d:\d\d:\d\d\s+\S+\s+([a-z_0-9]+)/.exec(b.lines[0]);b.tool=m?m[1]:"";b.mod=modOf(b.tool);const t=b.lines.join("\n");b.low=t.toLowerCase();
+b.err=/ ✗ /.test(b.lines[0]);b.warn=/⚠|запрещ|опасн/i.test(t);b.chg=b.lines.some(l=>/^\s+[+\-~>↶] /.test(l))}return out}
+function lineHtml(l,q){let h=esc(l);if(q){const i=h.toLowerCase().indexOf(esc(q).toLowerCase());if(i>=0)h=h.slice(0,i)+'<span class="hl">'+h.slice(i,i+esc(q).length)+"</span>"+h.slice(i+esc(q).length)}
+if(/^\s{3,}\+/.test(l)&&!/^\s+\+ (создан|папка)/.test(l))return`<span class="add">${h}</span>`;if(/^\s{3,}-/.test(l)&&!/^\s+- (удал)/.test(l))return`<span class="del">${h}</span>`;
+if(/ ✗ /.test(l))return`<span class="bad">${h}</span>`;if(/⚠/.test(l))return`<span class="warn">${h}</span>`;if(/ ✓ /.test(l))return`<span class="ok">${h}</span>`;return h}
+function drawFeed(){const q=$("q").value.trim(),md=$("mod").value,k=$("kind").value,box=$("feedbox");
+const list=blocks.filter(b=>(!q||b.low.includes(q.toLowerCase()))&&(!md||b.mod===md)&&(!k||(k=="err"&&b.err)||(k=="warn"&&b.warn)||(k=="chg"&&b.chg)));
+const shown=list.slice(-1500);box.innerHTML=shown.length?shown.map(b=>`<div class="blk">${b.lines.map(l=>lineHtml(l,q)).join("\n")}</div>`).join(""):'<div class="empty">Пока пусто</div>';
+$("fc").textContent=list.length+" из "+blocks.length;if($("auto").checked)box.scrollTop=box.scrollHeight}
+let pend="";async function feed(){try{const r=await api("/api/feed?pos="+feedPos);if(r.reset){blocks=[];pend=""}feedPos=r.pos;if(r.text){const t=pend+r.text;const cut=t.lastIndexOf("\n");
+const done=cut>=0?t.slice(0,cut):"";pend=cut>=0?t.slice(cut+1):t;if(done){const nb=parse(done);if(blocks.length&&nb.length&&!/^\d\d:\d\d:\d\d/.test(nb[0].lines[0])){blocks[blocks.length-1].lines.push(...nb.shift().lines)}
+blocks.push(...nb);if(blocks.length>5000)blocks=blocks.slice(-4000)}if($("feedtab").classList.contains("on"))drawFeed()}}catch(e){}}
+["q","mod","kind"].forEach(i=>$(i).addEventListener("input",drawFeed));
+// ---- changes ----
+const OPS={write:"запись",edit:"правка",multi_edit:"правки",delete:"удаление",move:"перемещение",copy:"копирование",rename:"переименование",unzip:"распаковка",zip:"архив",undo:"отмена",mkdir:"папка"};
+const nm=p=>p.split(/[\\/]/).pop();
+async function loadChanges(){const r=await api("/api/changes");changes=r.changes||[];drawChanges()}
+function drawChanges(){const q=$("cq").value.trim().toLowerCase();const l=changes.filter(c=>!q||c.paths.some(p=>p.toLowerCase().includes(q)));
+$("clist").innerHTML=l.length?l.map(c=>`<div class="ch ${cur==c.id?"sel":""}" onclick="openChange('${c.id}')"><input type="checkbox" ${sel.has(c.id)?"checked":""} ${c.undone||c.is_undo?"disabled":""} onclick="event.stopPropagation();tog('${c.id}',this.checked)">
+<div class="p"><div><b>${esc(c.paths.map(nm).slice(0,3).join(", "))}${c.paths.length>3?" +"+(c.paths.length-3):""}</b></div><div class="mut small">${new Date(c.time*1000).toLocaleString()} · ${OPS[c.op]||esc(c.op)}
+${c.undone?' <span class="badge u">отменено</span>':""}${c.is_undo?' <span class="badge">↶ отмена</span>':""}</div></div></div>`).join(""):'<div class="empty">Изменений ещё нет</div>';
+$("ubtn").disabled=!sel.size;$("ubtn").textContent=sel.size?`Отменить выбранные (${sel.size})`:"Отменить выбранные"}
+$("cq").addEventListener("input",drawChanges);
+function tog(id,on){on?sel.add(id):sel.delete(id);drawChanges()}
+async function openChange(id){cur=id;drawChanges();const c=changes.find(x=>x.id==id)||{};$("diff").innerHTML='<div class="empty">Загружаю...</div>';const r=await api("/api/diff?id="+encodeURIComponent(id));
+let h=`<div class="fh" style="font-weight:400"><div style="flex:1">${new Date((c.time||0)*1000).toLocaleString()} · ${OPS[c.op]||esc(c.op||"")}${c.undone?" · уже отменено":""}</div>
+${!c.undone&&!c.is_undo?`<button class="b r" onclick="undoIds(['${id}'])">Отменить это изменение</button>`:""}</div>`;
+for(const f of r.files||[]){const kind={created:"создан",deleted:"удалён",changed:"изменён"}[f.kind]||"";
+h+=`<div class="fh"><span style="flex:1" title="${esc(f.path)}">${esc(f.name)} <span class="mut small">${esc(f.path)}</span></span><span class="mut small">${kind}${f.rows?` <span class="ok">+${f.added}</span> <span class="bad">-${f.removed}</span>`:""}${f.later?" · потом менялся ещё":""}</span></div>`;
+if(f.note){h+=`<div class="empty">${esc(f.note)}</div>`;continue}if(!f.rows.length){h+='<div class="empty">Содержимое не изменилось</div>';continue}
+h+='<table class="d">'+f.rows.map(x=>x.t=="skip"?'<tr class="skip"><td colspan="4">⋯</td></tr>':`<tr class="${x.t}"><td class="n">${x.ln??""}</td><td class="c L">${esc(x.l??"")}</td><td class="n">${x.rn??""}</td><td class="c R">${esc(x.r??"")}</td></tr>`).join("")+"</table>"}
+$("diff").innerHTML=h+(r.files&&r.files.length?"":'<div class="empty">Нет данных об этом изменении</div>')}
+async function undoIds(ids){if(!confirm(`Отменить ${ids.length} изменение(й)? Файлы вернутся к состоянию до них.`))return;
+const r=await api("/api/undo",{ids});if(r.error)toast("Не удалось: "+r.error);else toast(`Отменено: ${(r.done||[]).length}`+((r.failed||[]).length?`, ошибок: ${r.failed.length} (${r.failed[0].error})`:""));
+sel.clear();hideBanner();await loadChanges();if(cur)openChange(cur)}
+function undoSel(){if(sel.size)undoIds([...sel])}
+function hideBanner(){$("banner").style.display="none"}
+// ---- tabs and links from notifications ----
+function tab(t){document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t==t));
+[["ov","ov"],["feed","feedtab"],["chg","chg"]].forEach(([k,id])=>$(id).classList.toggle("on",k==t));if(t=="feed")drawFeed();if(t=="chg")loadChanges()}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>tab(b.dataset.t));
+(async()=>{await load();await feed();const p=new URLSearchParams(location.search);history.replaceState(null,"","/?k="+K);
+const show=(p.get("show")||"").split(",").filter(Boolean),un=(p.get("undo")||"").split(",").filter(Boolean);
+if(p.get("tab"))tab(p.get("tab"));if(p.get("check"))check();
+if(show.length||un.length){tab("chg");await loadChanges();(un.length?un:[]).forEach(i=>sel.add(i));drawChanges();openChange((show[0]||un[0]));
+if(un.length){$("btext").innerHTML=`<b>Отменить ${un.length} изменение(й) агента?</b> Посмотрите разницу справа и нажмите «Отменить».`;$("banner").style.display="flex"}}})();
+setInterval(load,2000);setInterval(feed,1500);setInterval(()=>{if($("chg").classList.contains("on"))loadChanges()},6000);
+</script></body></html>
